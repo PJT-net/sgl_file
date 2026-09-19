@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三国群英传 - 主地图【从零开荒服】</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background-color: #0f121b;
+            color: #e8e8e8;
+            overflow: hidden;
+            user-select: none;
+        }
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 260px 1fr 290px;
+            grid-template-rows: 118px 1fr 145px;
+        }
+        /* 顶部栏 */
+        .top-header {
+            grid-column: 1 / -1;
+            background: linear-gradient(180deg, #222633, #171a24);
+            border-bottom: 1px solid #444858;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+        }
+        .player-info-left {
+            display: flex;
+            align-items: center;
+            gap:10px;
+        }
+        .avatar-box {
+            width:76px;height:76px;
+            border:2px solid #c9a257;
+            border-radius: 8px;
+            overflow:hidden;
+            background:#272b38;
+            display:flex;align-items:center;justify-content:center;
+            font-size:32px;
+        }
+        .player-text h2 {
+            font-size:16px;
+            color:#fff;
+        }
+        .vip-tag {
+            color:#ffc107;
+        }
+        .power-text {
+            color:#ff9b40;
+            font-weight:bold;
+        }
+        .resource-row {
+            display:flex;gap:14px;margin-top:4px;font-size:14px;
+        }
+        .top-btn-group {
+            display:flex;gap:8px;
+        }
+        .top-btn {
+            padding:7px 12px;
+            background:linear-gradient(180deg,#9b702c,#704c18);
+            border:1px solid #d4a046;
+            border-radius:4px;
+            cursor:pointer;
+        }
+        .top-btn:hover {
+            background:linear-gradient(180deg,#b88634,#8b5f1d);
+        }
+        /* 左侧任务面板 */
+        .left-task-panel {
+            background:#171a24;
+            border-right:1px solid #393d4d;
+            padding:10px;
+            overflow-y:auto;
+        }
+        .panel-title {
+            font-size:16px;
+            padding-bottom:6px;
+            border-bottom:1px solid #393d4d;
+            margin-bottom:10px;
+        }
+        .task-item {
+            background:#222633;
+            margin-bottom:8px;
+            padding:9px;
+            border-radius:5px;
+            border-left:4px solid #3b82f6;
+        }
+        .task-main {
+            border-left-color:#3b82f6;
+        }
+        .task-side {
+            border-left-color:#36bc68;
+        }
+        .task-name {
+            font-size:14px;
+            margin-bottom:4px;
+        }
+        .task-btn {
+            float:right;
+            padding:3px 8px;
+            background:#2563eb;
+            border-radius:3px;
+            font-size:12px;
+            cursor:pointer;
+        }
+        .task-btn-green {
+            background:#16a34a;
+        }
+        /* 中间地图区域 */
+        .map-main {
+            position:relative;
+            overflow:hidden;
+            background:#1a222e;
+        }
+        .map-canvas-wrap {
+            width:3200px;height:2000px;
+            background: url("https://picsum.photos/id/1036/1200/800");
+            background-size:cover;
+            transform-origin:0 0;
+        }
+        .city-tip-popup {
+            position:absolute;
+            top:38%;left:34%;
+            width:220px;
+            background:rgba(22,25,36,0.92);
+            border:1px solid #c9a257;
+            border-radius:6px;
+            padding:10px;
+        }
+        .city-tip-popup h4 {
+            color:#ffd06b;
+            margin-bottom:6px;
+        }
+        .city-tip-popup p {
+            font-size:13px;
+            line-height:1.6;
+        }
+        .map-icon {
+            position:absolute;
+            width:54px;height:54px;
+            background:#272b38;
+            border-radius:50%;
+            border:1px solid #888;
+            display:flex;align-items:center;justify-content:center;
+            font-size:12px;
+        }
+        .icon-linchang {top:22%;left:12%;}
+        .icon-kuangchang {top:32%;left:22%;}
+        .icon-muchang {top:62%;left:34%;}
+        /* 右侧面板 */
+        .right-info-panel {
+            background:#171a24;
+            border-left:1px solid #393d4d;
+            padding:10px;
+            overflow-y:auto;
+        }
+        .minimap-box {
+            width:100%;height:140px;
+            background:#222633;
+            border:1px solid #555;
+            margin-bottom:10px;
+        }
+        .event-item {
+            padding:6px 0;
+            font-size:13px;
+            border-bottom:1px dashed #333;
+        }
+        .countdown-text {
+            color:#ff6b6b;
+        }
+        /* 底部部队栏 */
+        .bottom-bar {
+            grid-column:1/-1;
+            background:linear-gradient(0deg,#222633,#171a24);
+            border-top:1px solid #444858;
+            padding:8px 12px;
+            display:flex;align-items:center;
+            gap:10px;
+        }
+        .troop-card {
+            width:142px;
+            background:#222633;
+            border:1px solid #555;
+            border-radius:6px;
+            padding:6px;
+            text-align:center;
+        }
+        .troop-name {
+            font-size:13px;
+            color:#ffd06b;
+        }
+        .troop-num {
+            font-size:14px;margin:4px 0;
+        }
+        .troop-stop-btn {
+            padding:3px 8px;
+            background:#991b1b;
+            border-radius:3px;
+            font-size:12px;
+            cursor:pointer;
+        }
+        .bottom-func-group {
+            margin-left:auto;
+            display:flex;gap:8px;
+        }
+        .func-btn {
+            padding:7px 10px;
+            background:#2f3444;
+            border:1px solid #555;
+            border-radius:4px;
+            cursor:pointer;
+        }
+        .func-btn:hover {
+            background:#3c4254;
+        }
+        /* 顶部活动图标栏 */
+        .activity-bar {
+            position:absolute;
+            top:10px;left:50%;transform:translateX(-50%);
+            display:flex;gap:6px;
+        }
+        .activity-icon {
+            width:62px;height:62px;
+            background:#222633;
+            border:1px solid #c9a257;
+            border-radius:6px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:12px;text-align:center;
+            cursor:pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <!-- 顶部玩家信息 -->
+    <div class="top-header">
+        <div class="player-info-left">
+            <div class="avatar-box">🗡️</div>
+            <div class="player-text">
+                <h2><span id="playerName">新主公</span> <span class="vip-tag">VIP<span id="vipNum">0</span></span></h2>
+                <div>Lv.<span id="playerLv">1</span>｜平民｜最强战力：<span class="power-text" id="powerText">0</span></div>
+                <div class="resource-row">
+                    <span>💰<span id="goldText">10.0</span>万</span>
+                    <span>🌾<span id="foodText">8.0</span>万</span>
+                    <span>🪨<span id="oreText">5.0</span>万</span>
+                    <span>💎<span id="diamondText">100</span></span>
+                </div>
+            </div>
+        </div>
+        <div class="top-btn-group">
+            <div class="top-btn" onclick="openPage('task.html')">任务</div>
+            <div class="top-btn">福利大厅</div>
+            <div class="top-btn">特权</div>
+        </div>
+    </div>
+
+    <!-- 左侧任务面板 -->
+    <div class="left-task-panel">
+        <div class="panel-title">任务列表</div>
+        <div id="taskListDom">
+            <!-- JS动态渲染任务 -->
+        </div>
+        <div class="panel-title" style="margin-top:16px;">快捷</div>
+        <div class="task-item">
+            <div class="task-name">⚔️ 前往招贤，招募武将</div>
+        </div>
+    </div>
+
+    <!-- 中间大地图 -->
+    <div class="map-main">
+        <div class="activity-bar">
+            <div class="activity-icon">熔炼将魂</div>
+            <div class="activity-icon">百战群英</div>
+            <div class="activity-icon">成长投资</div>
+            <div class="activity-icon">藏宝阁</div>
+            <div class="activity-icon">月魄悦赏</div>
+            <div class="activity-icon">神坛祈福</div>
+        </div>
+        <div class="map-canvas-wrap" id="mapWrap">
+            <div class="map-icon icon-linchang">林场</div>
+            <div class="map-icon icon-kuangchang">矿场</div>
+            <div class="map-icon icon-muchang">牧场</div>
+            <div class="city-tip-popup">
+                <h4>【东平】野城</h4>
+                <p>城墙：8000/8000</p>
+                <p>守军：10级</p>
+                <p>税银随封地等级提升</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧面板 -->
+    <div class="right-info-panel">
+        <div class="panel-title">世界</div>
+        <div class="minimap-box">小地图区域</div>
+        <div class="panel-title">天下大事</div>
+        <div class="event-item">野怪刷新倒计时 <span class="countdown-text" id="cdText">00:29:14</span></div>
+        <div class="event-item">国战将于 <span class="countdown-text">20:00</span> 开启</div>
+        <div class="panel-title" style="margin-top:16px;">玩法</div>
+        <div class="event-item">群雄争霸｜征神之路</div>
+        <div class="event-item">武器寻宝｜名将寻访</div>
+    </div>
+
+    <!-- 底部部队栏 -->
+    <div class="bottom-bar">
+        <div id="troopDom">
+            <!-- JS动态渲染部队，开局无部队 -->
+        </div>
+        <div class="bottom-func-group">
+            <div class="func-btn" onclick="openPage('general.html')">将领</div>
+            <div class="func-btn">爵位</div>
+            <div class="func-btn" onclick="openPage('fendi.html')">封地</div>
+            <div class="func-btn">仓库</div>
+        </div>
+    </div>
+</div>
+
+<script src="./gameCore.js"></script>
+<script>
+let gameData = GameCore.loadSave();
+
+// 页面跳转
+function openPage(url){
+    window.location.href = url;
+}
+
+// 刷新UI
+function refreshUI(){
+    gameData = GameCore.runResourceAutoProduce(gameData);
+    GameCore.calcTotalPower(gameData);
+    GameCore.saveSave(gameData);
+
+    document.getElementById("playerName").innerText = gameData.player.name;
+    document.getElementById("vipNum").innerText = gameData.player.vip;
+    document.getElementById("playerLv").innerText = gameData.player.level;
+    document.getElementById("powerText").innerText = gameData.player.power;
+
+    document.getElementById("goldText").innerText = GameCore.formatNum(gameData.resource.gold);
+    document.getElementById("foodText").innerText = GameCore.formatNum(gameData.resource.food);
+    document.getElementById("oreText").innerText = GameCore.formatNum(gameData.resource.ore);
+    document.getElementById("diamondText").innerText = gameData.resource.diamond;
+
+    // 渲染任务列表
+    let taskHtml = "";
+    gameData.taskList.forEach(t=>{
+        const cls = t.done ? "task-item task-side" : "task-item task-main";
+        taskHtml += `
+        <div class="${cls}">
+            <span class="task-btn ${t.done?'task-btn-green':''}" onclick="openPage('task.html?id=${t.id}')">${t.done?'已完成':'前往'}</span>
+            <div class="task-name">${t.name}</div>
+        </div>`;
+    })
+    document.getElementById("taskListDom").innerHTML = taskHtml;
+
+    // 渲染部队
+    let troopHtml = "";
+    if(gameData.generals.length === 0){
+        troopHtml = "<div style='color:#aaa'>暂无武将，请前往将领页面招募</div>";
+    }else{
+        gameData.generals.forEach(g=>{
+            troopHtml += `
+            <div class="troop-card">
+                <div class="troop-name">${g.name}</div>
+                <div class="troop-num">战力：${g.power}</div>
+                <div class="troop-stop-btn" onclick="alert('${g.name} 部队召回')">召回</div>
+            </div>`
+        })
+    }
+    document.getElementById("troopDom").innerHTML = troopHtml;
+}
+
+// 地图拖拽缩放
+const mapWrap = document.getElementById("mapWrap");
+let scale = 1;
+let offsetX = 0, offsetY = 0;
+let isDrag = false;
+let startX, startY;
+function updateMapTransform() {
+    mapWrap.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+}
+mapWrap.addEventListener("mousedown", (e)=>{
+    isDrag = true;
+    startX = e.clientX - offsetX;
+    startY = e.clientY - offsetY;
+});
+document.addEventListener("mousemove", (e)=>{
+    if(!isDrag) return;
+    offsetX = e.clientX - startX;
+    offsetY = e.clientY - startY;
+    updateMapTransform();
+});
+document.addEventListener("mouseup", ()=>{
+    isDrag = false;
+});
+mapWrap.addEventListener("wheel", (e)=>{
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.08 : 0.08;
+    scale = Math.max(0.4, Math.min(1.8, scale + delta));
+    updateMapTransform();
+});
+updateMapTransform();
+
+// 倒计时
+function updateCountdown(){
+    let sec = 29*60+14;
+    setInterval(()=>{
+        sec--;
+        if(sec <= 0) sec = 29*60+14;
+        let h = Math.floor(sec/3600);
+        let m = Math.floor((sec%3600)/60);
+        let s = sec%60;
+        document.getElementById("cdText").innerText = `${h}:${m}:${s}`;
+    },1000);
+}
+updateCountdown();
+
+// 定时刷新UI、自动产出资源
+setInterval(refreshUI,1000);
+refreshUI();
+</script>
+</body>
+</html>
