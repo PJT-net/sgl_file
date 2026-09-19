@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {margin:0;padding:0;box-sizing:border-box;color:#e8e8e8;font-family:Microsoft YaHei;}
+        body {background:#0f121b;padding:20px;}
+        .back-btn{padding:8px 14px;background:#704c18;border:1px solid #d4a046;border-radius:4px;cursor:pointer;margin-bottom:16px;}
+        .container{max-width:800px;margin:0 auto;background:#171a24;border:1px solid #c9a257;border-radius:8px;padding:20px;}
+        h1{color:#ffd06b;margin-bottom:16px;}
+        .task-desc{font-size:15px;line-height:1.8;margin-bottom:20px;}
+        .reward{background:#222633;padding:10px;border-radius:6px;margin-bottom:20px;}
+        .finish-btn{padding:8px 16px;background:#16a34a;border-radius:4px;cursor:pointer;font-size:15px;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <button class="back-btn" onclick="backToMap()">返回主地图</button>
+    <h1 id="taskTitle">任务详情</h1>
+    <div class="task-desc" id="taskDesc"></div>
+    <div class="reward">
+        <b>任务奖励：</b>
+        <div id="rewardText"></div>
+    </div>
+    <button class="finish-btn" id="finishBtn" onclick="finishTask()">完成任务领取奖励</button>
+</div>
+<script src="./gameCore.js"></script>
+<script>
+let gameData = GameCore.loadSave();
+let taskId = new URLSearchParams(window.location.search).get("id");
+let taskInfo = gameData.taskList.find(t=>t.id == taskId);
+
+function backToMap(){
+    window.location.href = "index.html";
+}
+
+function renderTask(){
+    if(!taskInfo){
+        document.getElementById("taskTitle").innerText = "任务不存在";
+        return;
+    }
+    document.getElementById("taskTitle").innerText = taskInfo.name;
+    document.getElementById("taskDesc").innerText = taskInfo.desc;
+    let rewardStr = `铜钱${GameCore.formatNum(taskInfo.reward.gold)}`;
+    if(taskInfo.reward.food) rewardStr += `，粮草${GameCore.formatNum(taskInfo.reward.food)}`;
+    if(taskInfo.reward.ore) rewardStr += `，矿石${GameCore.formatNum(taskInfo.reward.ore)}`;
+    if(taskInfo.reward.diamond) rewardStr += `，元宝${taskInfo.reward.diamond}`;
+    document.getElementById("rewardText").innerText = rewardStr;
+    if(taskInfo.done){
+        document.getElementById("finishBtn").innerText = "已领取";
+        document.getElementById("finishBtn").disabled = true;
+    }
+}
+
+function finishTask(){
+    if(!taskInfo || taskInfo.done) return;
+    // 发放奖励
+    gameData.resource.gold += taskInfo.reward.gold;
+    if(taskInfo.reward.food) gameData.resource.food += taskInfo.reward.food;
+    if(taskInfo.reward.ore) gameData.resource.ore += taskInfo.reward.ore;
+    if(taskInfo.reward.diamond) gameData.resource.diamond += taskInfo.reward.diamond;
+    taskInfo.done = true;
+    GameCore.saveSave(gameData);
+    alert("任务完成，奖励已发放！回到主地图查看资源变化");
+    renderTask();
+}
+renderTask();
+</script>
+</body>
+</html>
