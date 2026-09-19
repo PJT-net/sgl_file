@@ -1,107 +1,83 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>将领 - 三国群英传</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        * {margin:0;padding:0;box-sizing:border-box;color:#e8e8e8;font-family:Microsoft YaHei;}
-        body {background:#0f121b;padding:20px;}
-        .back-btn{padding:8px 14px;background:#704c18;border:1px solid #d4a046;border-radius:4px;cursor:pointer;margin-bottom:16px;}
-        .container{max-width:1200px;margin:0 auto;}
-        h1{color:#ffd06b;margin-bottom:20px;}
-        .general-list{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
-        .general-card{background:#171a24;border:1px solid #c9a257;border-radius:8px;padding:12px;}
-        .general-name{font-size:18px;color:#ffc107;margin-bottom:6px;}
-        .attr{font-size:14px;line-height:1.6}
-        .recruit-btn{margin-top:8px;padding:5px 10px;background:#16a34a;border-radius:4px;cursor:pointer;}
-        .upgrade-btn{margin-top:8px;padding:5px 10px;background:#2563eb;border-radius:4px;cursor:pointer;}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>将领系统</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{background:#0f121b;padding:20px;margin:0;}
+.back{padding:6px 14px;background:#704c18;border:1px solid #d4a046;border-radius:4px;cursor:pointer;}
+h1{color:#ffd06b;margin:20px 0;}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.card{background:#171a24;border:1px solid #c9a257;border-radius:8px;padding:14px;}
+.name{color:#ffc107;font-size:18px;margin-bottom:8px;}
+.btn{margin-top:10px;padding:5px 10px;border-radius:4px;border:none;cursor:pointer;}
+.add{background:#16a34a;}
+.up{background:#2563eb;}
+</style>
 </head>
 <body>
-<div class="container">
-    <button class="back-btn" onclick="backToMap()">返回主地图</button>
-    <h1>将领寻访｜招募武将</h1>
-    <div class="general-list" id="generalDom">
-        <!-- JS渲染武将 -->
-    </div>
-</div>
-<script src="./gameCore.js"></script>
+<div class="back" onclick="location.href='index.html'">返回主地图</div>
+<h1>名将招募</h1>
+<div class="grid" id="box"></div>
+
+<script src="core.js"></script>
 <script>
-let gameData = GameCore.loadSave();
-// 武将池
-const heroPool = [
-    {hid:1,name:"刘备",basePower:12000,costGold:80000},
-    {hid:2,name:"张飞",basePower:11000,costGold:70000},
-    {hid:3,name:"黄忠",basePower:13000,costGold:90000},
-    {hid:4,name:"马超",basePower:14000,costGold:100000}
-]
+const pool = [
+    {hid:1,name:"张飞",pow:11000,cost:70000},
+    {hid:2,name:"黄忠",pow:13000,cost:90000},
+    {hid:3,name:"马超",pow:14500,cost:100000},
+    {hid:4,name:"刘备",pow:12000,cost:80000}
+];
 
-function backToMap(){
-    window.location.href = "index.html";
-}
-
-function renderHeroList(){
+function render(){
+    let d = Game.get();
     let html = "";
-    heroPool.forEach(hero=>{
-        // 判断是否已经拥有
-        const owned = gameData.generals.find(g=>g.hid === hero.hid);
-        if(owned){
-            html += `
-            <div class="general-card">
-                <div class="general-name">${hero.name}</div>
-                <div class="attr">等级：${owned.lv}<br>战力：${owned.power}</div>
-                <button class="upgrade-btn" onclick="upgradeHero(${hero.hid})">升级(消耗5万铜钱)</button>
-            </div>`
+    pool.forEach(h=>{
+        let have = d.generals.find(x=>x.hid===h.hid);
+        if(have){
+            html += `<div class="card">
+                <div class="name">${h.name}</div>
+                <div>等级：${have.lv}</div>
+                <div>战力：${have.power}</div>
+                <button class="btn up" onclick="up(${h.hid})">升级(5万铜钱)</button>
+            </div>`;
         }else{
-            html += `
-            <div class="general-card">
-                <div class="general-name">${hero.name}</div>
-                <div class="attr">基础战力：${hero.basePower}<br>招募费用：${GameCore.formatNum(hero.costGold)}铜钱</div>
-                <button class="recruit-btn" onclick="recruitHero(${hero.hid})">招募</button>
-            </div>`
+            html += `<div class="card">
+                <div class="name">${h.name}</div>
+                <div>基础战力：${h.pow}</div>
+                <div>招募：${Game.format(h.cost)}铜钱</div>
+                <button class="btn add" onclick="add(${h.hid})">招募</button>
+            </div>`;
         }
-    })
-    document.getElementById("generalDom").innerHTML = html;
+    });
+    document.getElementById("box").innerHTML = html;
 }
 
-// 招募武将
-function recruitHero(hid){
-    const hero = heroPool.find(h=>h.hid === hid);
-    if(gameData.resource.gold >= hero.costGold){
-        gameData.resource.gold -= hero.costGold;
-        gameData.generals.push({
-            hid:hero.hid,
-            name:hero.name,
-            lv:1,
-            power:hero.basePower
-        })
-        GameCore.saveSave(gameData);
-        alert(`成功招募【${hero.name}】！`);
-        renderHeroList();
-    }else{
-        alert("铜钱不足！");
-    }
+function add(id){
+    let d = Game.get();
+    let h = pool.find(x=>x.hid===id);
+    if(d.resource.gold < h.cost) return alert("铜钱不足！");
+    d.resource.gold -= h.cost;
+    d.generals.push({hid:h.hid,name:h.name,lv:1,power:h.pow});
+    Game.save(d);
+    alert("招募成功！");
+    render();
 }
 
-// 升级武将
-function upgradeHero(hid){
-    const hero = gameData.generals.find(g=>g.hid === hid);
-    const cost = 50000;
-    if(gameData.resource.gold >= cost){
-        gameData.resource.gold -= cost;
-        hero.lv += 1;
-        hero.power = Math.floor(hero.power * 1.15);
-        GameCore.saveSave(gameData);
-        alert(`${hero.name}升级成功，战力提升！`);
-        renderHeroList();
-    }else{
-        alert("铜钱不足！");
-    }
+function up(id){
+    let d = Game.get();
+    let g = d.generals.find(x=>x.hid===id);
+    if(d.resource.gold < 50000) return alert("铜钱不足！");
+    d.resource.gold -= 50000;
+    g.lv++;
+    g.power = Math.floor(g.power*1.15);
+    Game.save(d);
+    alert("升级成功！");
+    render();
 }
-
-renderHeroList();
+render();
 </script>
 </body>
 </html>
