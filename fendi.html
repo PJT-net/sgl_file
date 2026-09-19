@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>封地 - 三国群英传</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {margin:0;padding:0;box-sizing:border-box;color:#e8e8e8;font-family:Microsoft YaHei;}
+        body {background:#0f121b;padding:20px;}
+        .back-btn{padding:8px 14px;background:#704c18;border:1px solid #d4a046;border-radius:4px;cursor:pointer;margin-bottom:16px;}
+        .container{max-width:1200px;margin:0 auto;}
+        h1{color:#ffd06b;margin-bottom:20px;}
+        .build-list{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+        .build-card{background:#171a24;border:1px solid #c9a257;border-radius:8px;padding:12px;}
+        .build-name{font-size:18px;color:#ffc107;margin-bottom:6px;}
+        .build-desc{font-size:14px;line-height:1.6;margin-bottom:8px;}
+        .build-btn{padding:5px 10px;background:#16a34a;border-radius:4px;cursor:pointer;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <button class="back-btn" onclick="backToMap()">返回主地图</button>
+    <h1>封地建设</h1>
+    <div class="build-list" id="buildDom">
+        <!-- JS渲染建筑 -->
+    </div>
+</div>
+<script src="./gameCore.js"></script>
+<script>
+let gameData = GameCore.loadSave();
+const buildConfig = [
+    {key:"gov",name:"官府",desc:"主公等级、解锁更多建筑",getCost:(lv)=>({gold:lv*100000})},
+    {key:"farm",name:"农田",desc:"提升粮草产出",getCost:(lv)=>({gold:lv*60000})},
+    {key:"mine",name:"矿场",desc:"提升矿石产出",getCost:(lv)=>({gold:lv*70000})},
+]
+
+function backToMap(){
+    window.location.href = "index.html";
+}
+
+function renderBuild(){
+    let html = "";
+    buildConfig.forEach(b=>{
+        const lv = gameData.buildings[b.key];
+        const cost = b.getCost(lv);
+        html += `
+        <div class="build-card">
+            <div class="build-name">${b.name} Lv.${lv}</div>
+            <div class="build-desc">${b.desc}<br>升级消耗：${GameCore.formatNum(cost.gold)}铜钱</div>
+            <button class="build-btn" onclick="upgradeBuild('${b.key}')">升级</button>
+        </div>`
+    })
+    document.getElementById("buildDom").innerHTML = html;
+}
+
+function upgradeBuild(key){
+    const cfg = buildConfig.find(b=>b.key === key);
+    const lv = gameData.buildings[key];
+    const cost = cfg.getCost(lv);
+    if(gameData.resource.gold >= cost.gold){
+        gameData.resource.gold -= cost.gold;
+        gameData.buildings[key] += 1;
+        // 官府升级同步提升玩家等级
+        if(key === "gov"){
+            gameData.player.level +=1;
+        }
+        GameCore.saveSave(gameData);
+        alert(`${cfg.name}升级成功！`);
+        renderBuild();
+    }else{
+        alert("铜钱不足！");
+    }
+}
+renderBuild();
+</script>
+</body>
+</html>
