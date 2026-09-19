@@ -22,6 +22,8 @@ body{background:#0f121b;overflow:hidden;user-select:none;}
 .func-btn{padding:6px 12px;background:#2f3444;border:1px solid #555;border-radius:4px;cursor:pointer;}
 .task-item{background:#222633;padding:8px;border-radius:4px;margin-bottom:8px;border-left:3px solid #3b82f6;}
 .task-btn{float:right;background:#2563eb;padding:2px 8px;border-radius:3px;font-size:12px;cursor:pointer;}
+/* 新增战斗按钮样式 */
+.battle-btn{padding:6px 12px;background:#991b1b;border:1px solid #f87171;border-radius:4px;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -29,7 +31,7 @@ body{background:#0f121b;overflow:hidden;user-select:none;}
 <div class="top">
     <div class="info">
         <h2><span id="name">新主公</span> <span style="color:#ffc107">VIP0</span></h2>
-        <p>Lv.<span id="lv">0</span>｜总战力：<span id="power">0</span></p>
+        <p>Lv.<span id="lv">0</span>｜经验：<span id="exp">0</span>/<span id="expNeed">1000</span>｜总战力：<span id="power">0</span></p>
         <div class="res">
             <span>💰 <span id="gold">2.0</span>万</span>
             <span>🌾 <span id="food">1.0</span>万</span>
@@ -55,6 +57,7 @@ body{background:#0f121b;overflow:hidden;user-select:none;}
 
     <div class="bottom">
         <div id="troopText" style="color:#bbb">暂无部队，请先招募武将</div>
+        <div class="battle-btn" onclick="battle()">出征杀敌（+500经验）</div>
         <div class="func">
             <div class="func-btn" onclick="location.href='general.html'">将领</div>
             <div class="func-btn" onclick="location.href='fendi.html'">封地</div>
@@ -64,6 +67,18 @@ body{background:#0f121b;overflow:hidden;user-select:none;}
 
 <script src="core.js"></script>
 <script>
+// 新增战斗函数：杀敌拿经验
+function battle(){
+    let d = Game.get();
+    if(d.generals.length <= 0){
+        alert("冇武将，唔可以出征！请先去将领页面招募武将");
+        return;
+    }
+    Game.addExp(500);
+    alert("战斗胜利！击杀敌军，获得500经验");
+    refresh();
+}
+
 function refresh(){
     let d = Game.autoRes();
     Game.calcPower();
@@ -71,6 +86,8 @@ function refresh(){
 
     document.getElementById("name").innerText = d.player.name;
     document.getElementById("lv").innerText = d.player.level;
+    document.getElementById("exp").innerText = d.player.exp;
+    document.getElementById("expNeed").innerText = d.player.expNeed;
     document.getElementById("power").innerText = d.player.power;
     document.getElementById("gold").innerText = Game.format(d.resource.gold);
     document.getElementById("food").innerText = Game.format(d.resource.food);
