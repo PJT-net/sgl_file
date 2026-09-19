@@ -6,6 +6,7 @@ const Game = {
                 name:"新主公",
                 level:0,
                 exp:0,
+                expNeed:1000, // 当前等级升级所需经验
                 power:0,
                 vip:0
             },
@@ -68,6 +69,22 @@ const Game = {
         d.player.power = p;
         this.save(d);
         return p;
+    },
+
+    // ========== 新增：杀敌获取经验，自动判断升级 ==========
+    addExp(killExp){
+        let d = this.get();
+        d.player.exp += killExp;
+
+        // 循环判断是否满足升级
+        while(d.player.exp >= d.player.expNeed){
+            d.player.exp -= d.player.expNeed;
+            d.player.level +=1;
+            // 下一级需要嘅经验，逐级放大
+            d.player.expNeed = Math.floor(d.player.expNeed * 1.4);
+        }
+        this.save(d);
+        return d;
     },
 
     format(num){
